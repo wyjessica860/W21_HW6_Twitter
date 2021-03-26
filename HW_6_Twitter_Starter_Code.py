@@ -1,13 +1,13 @@
 #########################################
-##### Name:                         #####
-##### Uniqname:                     #####
+##### Name:  Yue Wang               #####
+##### Uniqname:  wyjessic           #####
 #########################################
 
 from requests_oauthlib import OAuth1
 import json
 import requests
-
-import hw6_secrets_starter as secrets # file that contains your OAuth credentials
+from collections import Counter
+import secrets_starter_code as secrets # file that contains your OAuth credentials
 
 CACHE_FILENAME = "twitter_cache.json"
 CACHE_DICT = {}
@@ -96,8 +96,11 @@ def construct_unique_key(baseurl, params):
     string
         the unique key as a string
     '''
-    #TODO Implement function
-    pass
+    key_return = baseurl
+    for _key,_value in params.items():
+        key_return = key_return + "_"+ _key + "_" + str(_value)
+    return key_return
+    
 
 
 def make_request(baseurl, params):
@@ -116,8 +119,8 @@ def make_request(baseurl, params):
         the data returned from making the request in the form of 
         a dictionary
     '''
-    #TODO Implement function
-    pass
+    response = requests.get(baseurl,params = params)
+    return response.json()
 
 
 def make_request_with_cache(baseurl, hashtag, count):
@@ -148,8 +151,18 @@ def make_request_with_cache(baseurl, hashtag, count):
         the results of the query as a dictionary loaded from cache
         JSON
     '''
-    #TODO Implement function
-    pass
+    params = {"has":hashtag,"count":count}
+    new_key = construct_unique_key(baseurl, params)
+    cache_dict = open_cache()
+    try:
+        response = cache_dict[new_key]
+        print("fetching cached data")
+    except:
+        print( "making new request")
+        cache_dict[new_key] = make_request(baseurl, params)
+        save_cache(cache_dict)
+
+    
 
 
 def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
@@ -171,8 +184,12 @@ def find_most_common_cooccurring_hashtag(tweet_data, hashtag_to_ignore):
         queried in make_request_with_cache()
 
     '''
-    # TODO: Implement function 
-    pass
+    has_set = Counter()
+    for i in tweet_data["statuses"]:
+        has_set += Counter(i["entities"]["hashtags"])
+    
+    return has_set.most_common(2)
+
     ''' Hint: In case you're confused about the hashtag_to_ignore 
     parameter, we want to ignore the hashtag we queried because it would 
     definitely be the most occurring hashtag, and we're trying to find 
